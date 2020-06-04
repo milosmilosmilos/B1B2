@@ -1,0 +1,123 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.OleDb;
+
+namespace B1B2konacno
+{
+    public partial class SpisakPasa : Form
+    {
+        public SpisakPasa()
+        {
+            InitializeComponent();
+        }
+
+        private void SpisakPasa_Load(object sender, EventArgs e)
+        {
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B1.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT * FROM Izlozba ORDER BY IzlozbaID");
+            try
+            {
+                con.Open();
+                OleDbDataReader reader = cmd.ExecuteReader();
+                while (reader.Read()) comboBox1.Items.Add(reader["IzlozbaID"].ToString());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            label4.Visible = true;
+            label5.Visible = true;
+            int izl =Convert.ToInt32( comboBox1.SelectedItem.ToString());
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B1.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT COUNT(PasID) as prvi FROM REZULTAT WHERE IzlozbaID={0}",izl);
+            try
+            {
+                con.Open();
+                OleDbDataReader reader = cmd.ExecuteReader();
+                reader.Read(); label4.Text = reader["prvi"].ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT COUNT(PasID) as drugi FROM REZULTAT WHERE IzlozbaID={0} AND Rezultat IS NOT NULL", izl);
+            try
+            {
+                con.Open();
+                OleDbDataReader reader = cmd.ExecuteReader();
+                reader.Read(); label5.Text = reader["drugi"].ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            int izl = Convert.ToInt32(comboBox1.SelectedItem.ToString());
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B1.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT KATEGORIJA.KategorijaID, KATEGORIJA.Naziv, Count(REZULTAT.PasID) AS BrojPasa FROM KATEGORIJA INNER JOIN REZULTAT ON KATEGORIJA.KategorijaID = REZULTAT.KategorijaID WHERE REZULTAT.Rezultat Is Not Null AND REZULTAT.IzlozbaID={0} GROUP BY REZULTAT.IzlozbaID, KATEGORIJA.KategorijaID, KATEGORIJA.Naziv", izl);
+            try
+            {
+                con.Open();
+                DataSet ds = new DataSet();
+                OleDbDataAdapter da = new OleDbDataAdapter();
+                da.SelectCommand = cmd;
+                da.Fill(ds);
+                dataGridView1.DataSource = ds.Tables[0];
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+              
+            }
+        }
+    }
+}
