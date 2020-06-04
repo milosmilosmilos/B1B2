@@ -1,0 +1,156 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.OleDb;
+
+namespace B1B2konacno
+{
+    public partial class PrijavaPasa : Form
+    {
+        public PrijavaPasa()
+        {
+            InitializeComponent();
+        }
+
+        private void PrijavaPasa_Load(object sender, EventArgs e)
+        {
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B1.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT * FROM PAS ORDER BY PasID");
+            try
+            {
+                con.Open();
+                OleDbDataReader reader = cmd.ExecuteReader();
+                while (reader.Read()) comboBox1.Items.Add(reader["PasID"].ToString()+'-'+reader["Ime"].ToString());
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+            //izlozba
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT * FROM Izlozba ORDER BY IzlozbaID");
+            try
+            {
+                con.Open();
+                OleDbDataReader reader = cmd.ExecuteReader();
+                while (reader.Read()) comboBox2.Items.Add(reader["IzlozbaID"].ToString() + '-' + reader["Mesto"].ToString());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+            //kategorija
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT * FROM Kategorija ORDER BY KategorijaID");
+            try
+            {
+                con.Open();
+                OleDbDataReader reader = cmd.ExecuteReader();
+                while (reader.Read()) comboBox3.Items.Add(reader["KategorijaID"].ToString() + '-' + reader["Naziv"].ToString());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+            button1.Enabled = false;
+            button2.Enabled = true;
+            comboBox2.Enabled = false;
+            comboBox3.Enabled = false;
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+            button1.Enabled = true;
+            button2.Enabled =false;
+            comboBox2.Enabled = true;
+            comboBox3.Enabled = true;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B1.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            string str1 = comboBox1.SelectedItem.ToString(), str2 = comboBox2.SelectedItem.ToString(), str3 = comboBox3.SelectedItem.ToString();
+            str1 = str1.Substring(0, str1.IndexOf('-'));
+            str2 = str2.Substring(0, str2.IndexOf('-'));
+            str3 = str3.Substring(0, str3.IndexOf('-'));
+            cmd.CommandText = string.Format("INSERT INTO REZULTAT(IzlozbaID,KategorijaID,PasID) VALUES('{0}',{1},{2})",str2, Convert.ToInt32(str3), Convert.ToInt32(str1));
+            try
+            {
+                con.Open();
+                cmd.ExecuteNonQuery();
+                MessageBox.Show("Uspesno prijavljen pas");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B1.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            string str1 = comboBox1.SelectedItem.ToString();
+            str1 = str1.Substring(0, str1.IndexOf('-'));
+            cmd.CommandText = string.Format("DELETE FROM REZULTAT WHERE PasID={0}",Convert.ToInt32(str1));
+            try
+            {
+                con.Open();
+                cmd.ExecuteNonQuery();
+                MessageBox.Show("Uspesno izbrisan pas");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+    }
+}
