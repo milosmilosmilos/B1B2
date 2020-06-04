@@ -1,0 +1,150 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.OleDb;
+
+namespace B1B2konacno
+{
+    public partial class SpisakPoRasi : Form
+    {
+        public SpisakPoRasi()
+        {
+            InitializeComponent();
+        }
+
+        private void SpisakPoRasi_Load(object sender, EventArgs e)
+        {
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B2.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT * FROM Izlozba ORDER BY IzlozbaID");//planirano je da svi id-evi budu isti ali posto je u kreiranoj bazi bilo id-eva koji nisu oblika XXX0099 sort ne lici ni na sta :)
+            try
+            {
+                con.Open();
+                OleDbDataReader reader = cmd.ExecuteReader();
+                while (reader.Read()) comboBox1.Items.Add(reader["IzlozbaID"].ToString());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+            //rasa
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT * FROM RASA ORDER BY RasaID");
+            try
+            {
+                con.Open();
+                OleDbDataReader reader = cmd.ExecuteReader();
+                while (reader.Read()) comboBox2.Items.Add(reader["NazivRase"].ToString());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            label5.Visible = true;
+            string izl = comboBox1.SelectedItem.ToString();
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B2.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT COUNT(PasID) as prvi FROM REZULTAT WHERE IzlozbaID='{0}' AND Rezultat IS NOT NULL", izl);
+            try
+            {
+                con.Open();
+                OleDbDataReader reader = cmd.ExecuteReader();
+                reader.Read(); label5.Text = reader["prvi"].ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            label6.Visible = true;
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B2.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT Count(REZULTAT.PasID) AS drugi FROM RASA INNER JOIN (PAS INNER JOIN REZULTAT ON PAS.PasID = REZULTAT.PasID) ON RASA.RasaID = PAS.RasaID WHERE REZULTAT.IzlozbaID='{0}' AND RASA.NazivRase='{1}' AND REZULTAT.Rezultat Is Not Null", comboBox1.SelectedItem,comboBox2.SelectedItem);
+            try
+            {
+                con.Open();
+                OleDbDataReader reader = cmd.ExecuteReader();
+                reader.Read(); label6.Text = reader["drugi"].ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B2.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("SELECT PAS.Ime as ImePsa FROM (RASA INNER JOIN PAS ON RASA.RasaID = PAS.RasaID) INNER JOIN (IZLOZBA INNER JOIN REZULTAT ON IZLOZBA.IzlozbaID = REZULTAT.IzlozbaID) ON PAS.PasID = REZULTAT.PasID WHERE REZULTAT.Rezultat Is Not Null AND REZULTAT.IzlozbaID='{0}' AND RASA.NazivRase='{1}' GROUP BY REZULTAT.IzlozbaID, REZULTAT.PasID, RASA.NazivRase, PAS.Ime", comboBox1.SelectedItem, comboBox2.SelectedItem);
+            try
+            {
+                con.Open();
+                DataSet ds = new DataSet();
+                OleDbDataAdapter da = new OleDbDataAdapter();
+                da.SelectCommand = cmd;
+                da.Fill(ds);
+                dataGridView1.DataSource = ds.Tables[0];
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                cmd.Dispose();
+                con.Close();
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+    }
+}
