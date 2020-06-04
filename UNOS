@@ -1,0 +1,105 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.OleDb;
+
+namespace B1B2konacno
+{
+    public partial class Unos : Form
+    {
+        public Unos()
+        {
+            InitializeComponent();
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+            button1.Enabled = true;
+            button2.Enabled = false;
+            textBox2.Enabled = true;
+            dateTimePicker1.Enabled = true;
+        }
+
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+            button1.Enabled = false;
+            button2.Enabled = true;
+            textBox2.Enabled = false;
+            textBox1.Enabled = true;
+            dateTimePicker1.Enabled = false;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            DateTime d = dateTimePicker1.Value;
+            string mesecm;
+            int mesec = d.Month;
+            int godina = d.Year;
+            int dan = d.Day;
+            if (mesec < 10) mesecm = '0' + mesec.ToString();
+            else mesecm = mesec.ToString();
+            string grad = textBox2.Text; grad = grad.Substring(0, 3); grad = grad.ToUpper();
+            string sifra = grad + mesecm + godina.ToString();
+            textBox1.Text = sifra;
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B2.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("INSERT INTO IZLOZBA VALUES('{0}','{1}',#{2}#)", textBox1.Text, textBox2.Text, dateTimePicker1.Value.ToShortDateString());
+            try
+            {
+                con.Open();
+                cmd.ExecuteNonQuery();
+                MessageBox.Show("Uspesno ste dodali izlozbu");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                con.Close();
+            }
+            
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            OleDbConnection con = new OleDbConnection();
+            con.ConnectionString = @"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=B2.accdb";
+            OleDbCommand cmd = new OleDbCommand();
+            cmd.Connection = con;
+            cmd.CommandText = string.Format("DELETE FROM IZLOZBA WHERE IzlozbaID='{0}'", textBox1.Text);
+            try
+            {
+                con.Open();
+                cmd.ExecuteNonQuery();
+                MessageBox.Show("Uspesno ste izbrisali izlozbu");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void Unos_Load(object sender, EventArgs e)
+        {
+
+        }
+    }
+}
